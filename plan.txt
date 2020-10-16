@@ -1,0 +1,32 @@
+createdAt and updatedAt Field added by default
+
+User:
+   email
+   username
+   password (hide in graphql api)
+   friends(graphql field only)
+   inbox(graphql field only)
+
+Friends:
+   id(PK)
+   userId1(FK)
+   userId2(FK)
+   relationship
+   inboxId
+
+Inbox:
+   id
+   userId1(FK)
+   userId2(FK)
+   ConvoId
+
+Convo:
+   userId1(FK)
+   userId2(FK)
+   messageId
+   
+
+Messages:
+   text
+   
+   
