@@ -1,32 +1,25 @@
 createdAt and updatedAt Field added by default
 
-User:
-   email
-   username
-   password (hide in graphql api)
-   friends(graphql field only)
-   inbox(graphql field only)
+User
+- id
+- name
+- rooms/inboxes (One to Many with Participant)
 
-Friends:
-   id(PK)
-   userId1(FK)
-   userId2(FK)
-   relationship
-   inboxId
+Room
+- id
+- name
+- type
+- messages (FK) (One To Many with Message)
 
-Inbox:
-   id
-   userId1(FK)
-   userId2(FK)
-   ConvoId
+Message
+- id
+- roomId (FK) (Many to One with Room)
+- userId (FK) (Many to One with User)
+- message
 
-Convo:
-   userId1(FK)
-   userId2(FK)
-   messageId
-   
+Participant
+- userId (Primary FK) (Many to One with User)
+- roomId (Primary FK) (Many to One with Room)
 
-Messages:
-   text
    
    

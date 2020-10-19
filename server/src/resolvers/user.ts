@@ -1,18 +1,17 @@
-import { MyContext } from '../utilities/types';
 import {
    Arg,
    Ctx,
    Field,
-   FieldResolver,
    InputType,
    Int,
    Mutation,
+   ObjectType,
    Query,
    Resolver,
-   Root,
 } from 'type-graphql';
-import { Friend } from '../entities/Friend';
 import { User } from '../entities/User';
+import argon2 from 'argon2';
+import { MyContext } from '../utilities/types';
 
 @InputType()
 class UserInput {
@@ -22,6 +21,25 @@ class UserInput {
    username: string;
    @Field()
    password: string;
+}
+
+class FieldError {
+   // ? means undefined
+   @Field()
+   field: string;
+
+   @Field()
+   message: string;
+}
+
+@ObjectType()
+class UserResponse {
+   // ? means undefined
+   @Field(() => [FieldError], { nullable: true })
+   errors?: FieldError[];
+
+   @Field(() => User, { nullable: true })
+   user?: User;
 }
 
 @Resolver(User)
@@ -35,6 +53,15 @@ export class UserResolver {
    // }
 
    // Queries
+   @Query(() => User)
+   async me(@Ctx() { req }: MyContext) {
+      if (!req.session.userId) {
+         return null;
+      }
+
+      return await User.findOne(req.session.userId);
+   }
+
    @Query(() => [User])
    async users(): Promise<User[]> {
       const users = await User.find();
@@ -50,35 +77,64 @@ export class UserResolver {
    }
 
    // Mutations
+   @Mutation(() => UserResponse)
+   async login(
+      @Arg('usernameOrEmail') usernameOrEmail: String,
+      @Arg('password') password: String,
+      @Ctx() { req }: MyContext
+   ): Promise<UserResponse> {
+      const user = await User.findOne(
+         usernameOrEmail.includes('@')
+            ? { where: { email: usernameOrEmail } }
+            : { where: { username: usernameOrEmail } }
+      );
+
+      if (!user) {
+         return {
+            errors: [
+               {
+                  field: 'usernameOrEmail',
+                  message: "Username doesn't exist",
+               },
+            ],
+         };
+      }
+
+      const validPassword = await argon2.verify(
+         user.password,
+         password as string | Buffer
+      );
+
+      if (!validPassword) {
+         return {
+            errors: [
+               {
+                  field: 'password',
+                  message: 'Invalid login, Please try again!',
+               },
+            ],
+         };
+      }
+
+      req.session.userId = user.id;
+
+      return { user };
+   }
+
    @Mutation(() => User)
-   async createUser(@Arg('args') args: UserInput): Promise<User> {
-      return await User.create({
+   async createUser(
+      @Arg('args') { password, ...args }: UserInput,
+      @Ctx() { req }: MyContext
+   ): Promise<User> {
+      const hashedPassword = await argon2.hash(password);
+
+      const user = await User.create({
+         password: hashedPassword,
          ...args,
       }).save();
-   }
 
-   //----------------------------FRIEND-----------------------------------
-   @Mutation(() => Friend)
-   async addFriend(
-      @Arg('userId', () => Int) userId: number,
-      @Arg('friendId', () => Int) friendId: number
-   ) {
-      const me = await User.findOne(userId);
-      const friend = await User.findOne(friendId);
-
-      const resolve = await Friend.create({
-         user1: me,
-         user2: friend,
-         relationship: 1,
-      }).save();
-
-      return resolve;
-   }
-
-   @Query(() => [Friend])
-   async friends() {
-      const a = await Friend.find();
-      console.log('users : ', a);
-      return a;
+      console.log(user);
+      req.session.userId = user.id;
+      return user;
    }
 }

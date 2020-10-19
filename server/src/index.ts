@@ -1,21 +1,21 @@
-import 'reflect-metadata';
+import { ApolloServer } from 'apollo-server-express';
+import connectRedis from 'connect-redis';
+import cors from 'cors';
 import 'dotenv-safe/config';
 import express from 'express';
-import { ApolloServer } from 'apollo-server-express';
-import cors from 'cors';
-import { buildSchema } from 'type-graphql';
-import Redis from 'ioredis';
 import session from 'express-session';
-import connectRedis from 'connect-redis';
-import { COOKIE_NAME, __prod__ } from './utilities/constants';
-import { createConnection } from 'typeorm';
-import { User } from './entities/User';
-import { UserResolver } from './resolvers/user';
+import Redis from 'ioredis';
 import path from 'path';
-import { Conversation } from './entities/Conversation';
-import { Friend } from './entities/Friend';
-import { Inbox } from './entities/Inbox';
+import 'reflect-metadata';
+import { buildSchema } from 'type-graphql';
+import { createConnection } from 'typeorm';
+import { Channel } from './entities/Channel';
 import { Message } from './entities/Message';
+import { Participant } from './entities/Participant';
+import { User } from './entities/User';
+import { ChannelResolver } from './resolvers/channel';
+import { UserResolver } from './resolvers/user';
+import { COOKIE_NAME, __prod__ } from './utilities/constants';
 
 const main = async () => {
    const PORT = parseInt(process.env.PORT as string) || 4000;
@@ -27,9 +27,11 @@ const main = async () => {
       url: process.env.DATABASE_URL,
       synchronize: !__prod__, // synchronize false during prod
       migrations: [path.join(__dirname, './migrations/*')],
-      entities: [User, Conversation, Friend, Inbox, Message],
+      entities: [User, Channel, Participant, Message],
    });
-   await Friend.delete({});
+
+   // await Inbox.delete({});
+   // await Channel.delete({});
    // await conn.runMigrations();
 
    const RedisStore = connectRedis(session);
@@ -37,7 +39,7 @@ const main = async () => {
 
    const apolloServer = new ApolloServer({
       schema: await buildSchema({
-         resolvers: [UserResolver],
+         resolvers: [UserResolver, ChannelResolver],
          validate: false,
       }),
       // CONTEXT - a special object accesible by all reslovers

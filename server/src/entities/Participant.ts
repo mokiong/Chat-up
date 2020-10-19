@@ -1,34 +1,31 @@
 import { Field, ObjectType } from 'type-graphql';
 import {
    BaseEntity,
-   Column,
    CreateDateColumn,
+   JoinColumn,
    ManyToOne,
+   OneToMany,
+   OneToOne,
    PrimaryGeneratedColumn,
    UpdateDateColumn,
 } from 'typeorm';
 import { Entity } from 'typeorm/decorator/entity/Entity';
 import { Channel } from './Channel';
+import { Message } from './Message';
 import { User } from './User';
 
 @ObjectType()
 @Entity()
-export class Message extends BaseEntity {
+export class Participant extends BaseEntity {
    @Field()
    @PrimaryGeneratedColumn()
    id!: number;
 
-   @Field(() => User)
-   @ManyToOne(() => User)
-   user!: User;
+   @ManyToOne(() => User, (user) => user.channels)
+   user: User;
 
-   @Field(() => Channel)
-   @ManyToOne(() => Channel, (channel) => channel.messages)
-   channel: Channel;
-
-   @Field()
-   @Column()
-   text!: String;
+   @ManyToOne(() => Channel, (channel) => channel.users)
+   channel: Channel[];
 
    @Field(() => String)
    @CreateDateColumn()

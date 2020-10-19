@@ -1,38 +1,38 @@
-import 'reflect-metadata';
 import { Field, ObjectType } from 'type-graphql';
 import {
    BaseEntity,
+   Column,
    CreateDateColumn,
    OneToMany,
-   PrimaryGeneratedColumn,
+   PrimaryColumn,
    UpdateDateColumn,
 } from 'typeorm';
-import { Column } from 'typeorm/decorator/columns/Column';
 import { Entity } from 'typeorm/decorator/entity/Entity';
+import { Message } from './Message';
 import { Participant } from './Participant';
 
 @ObjectType()
 @Entity()
-export class User extends BaseEntity {
+export class Channel extends BaseEntity {
    @Field()
-   @PrimaryGeneratedColumn()
-   id!: number;
-
-   // GraphQL doesnt expose property if @Field is removed
-   @Field()
-   @Column({ unique: true })
-   username!: string;
+   @PrimaryColumn()
+   id!: String;
 
    @Field()
    @Column({ unique: true })
-   email!: string;
+   name!: String;
+
+   @Field(() => Message)
+   @OneToMany(() => Message, (message) => message.channel)
+   messages: Message[];
 
    @Field(() => Participant)
-   @OneToMany(() => Participant, (participant) => participant.user)
-   channels: Participant[];
+   @OneToMany(() => Participant, (participant) => participant.channel)
+   users: Participant[];
 
-   @Column()
-   password!: string;
+   // @Field()
+   // @Column({ default: null })
+   // inboxId!: number;
 
    @Field(() => String)
    @CreateDateColumn()
