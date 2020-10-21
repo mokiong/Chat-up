@@ -63,14 +63,13 @@ export class UserResolver {
    // Queries
    @Query(() => Me)
    async me(@Ctx() { req }: MyContext) {
-      console.log(req.session);
       if (!req.session.userId) {
          return {
             user: null,
          };
       }
 
-      return await User.findOne(req.session.userId);
+      return { user: await User.findOne(req.session.userId) };
    }
 
    @Query(() => [User])

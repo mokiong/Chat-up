@@ -22,11 +22,9 @@ export class Channel extends BaseEntity {
    @Column({ unique: true })
    name!: String;
 
-   @Field(() => Message)
    @OneToMany(() => Message, (message) => message.channel)
    messages: Message[];
 
-   @Field(() => Participant)
    @OneToMany(() => Participant, (participant) => participant.channel)
    users: Participant[];
 

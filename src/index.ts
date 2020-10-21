@@ -16,6 +16,7 @@ import { UserResolver } from './resolvers/user';
 import { COOKIE_NAME, __prod__ } from './utilities/constants';
 import { Session as SessionEntity } from './entities/Session';
 import { TypeormStore } from 'typeorm-store';
+import { MessageResolver } from './resolvers/message';
 
 const main = async () => {
    const PORT = parseInt(process.env.PORT as string) || 4000;
@@ -36,7 +37,7 @@ const main = async () => {
 
    const apolloServer = new ApolloServer({
       schema: await buildSchema({
-         resolvers: [UserResolver, ChannelResolver],
+         resolvers: [UserResolver, ChannelResolver, MessageResolver],
          validate: false,
       }),
       // CONTEXT - a special object accesible by all reslovers

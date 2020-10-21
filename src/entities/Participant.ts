@@ -1,6 +1,7 @@
 import { Field, ObjectType } from 'type-graphql';
 import {
    BaseEntity,
+   Column,
    CreateDateColumn,
    ManyToOne,
    PrimaryGeneratedColumn,
@@ -22,6 +23,14 @@ export class Participant extends BaseEntity {
 
    @ManyToOne(() => Channel, (channel) => channel.users)
    channel: Channel[];
+
+   @Field()
+   @Column()
+   userId: number;
+
+   @Field()
+   @Column()
+   channelId: String;
 
    @Field(() => String)
    @CreateDateColumn()

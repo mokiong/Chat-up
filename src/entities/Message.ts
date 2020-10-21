@@ -18,13 +18,19 @@ export class Message extends BaseEntity {
    @PrimaryGeneratedColumn()
    id!: number;
 
-   @Field(() => User)
    @ManyToOne(() => User)
    user!: User;
 
-   @Field(() => Channel)
    @ManyToOne(() => Channel, (channel) => channel.messages)
-   channel: Channel;
+   channel!: Channel;
+
+   @Field()
+   @Column()
+   userId!: number;
+
+   @Field()
+   @Column()
+   channelId!: String;
 
    @Field()
    @Column()
