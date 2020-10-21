@@ -1,7 +1,25 @@
 import { Channel } from '../entities/Channel';
-import { Arg, Int, Mutation, Query, Resolver } from 'type-graphql';
+import {
+   Arg,
+   Field,
+   Int,
+   Mutation,
+   ObjectType,
+   Query,
+   Resolver,
+} from 'type-graphql';
 import { v4 } from 'uuid';
 import { User } from '../entities/User';
+
+@ObjectType()
+class ChannelResponse {
+   // ? means undefined
+   @Field({ nullable: true })
+   errors?: String;
+
+   @Field(() => Channel, { nullable: true })
+   channel?: Channel;
+}
 
 @Resolver(Channel)
 export class ChannelResolver {
@@ -28,7 +46,7 @@ export class ChannelResolver {
    }
 
    // Mutations
-   @Mutation(() => [Channel])
+   @Mutation(() => Channel)
    async createChannel(@Arg('name') channelName: String): Promise<Channel> {
       const code = v4();
 
@@ -36,5 +54,12 @@ export class ChannelResolver {
          name: channelName,
          id: code,
       }).save();
+   }
+
+   @Mutation(() => ChannelResponse)
+   async joinChannel(
+      @Arg('name') channelName: String
+   ): Promise<ChannelResponse> {
+      const channel = await Participant.create({});
    }
 }

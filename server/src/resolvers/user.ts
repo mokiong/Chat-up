@@ -23,6 +23,7 @@ class UserInput {
    password: string;
 }
 
+@ObjectType()
 class FieldError {
    // ? means undefined
    @Field()
@@ -30,6 +31,13 @@ class FieldError {
 
    @Field()
    message: string;
+}
+
+@ObjectType()
+class Me {
+   // ? means undefined
+   @Field(() => User, { nullable: true })
+   user?: User;
 }
 
 @ObjectType()
@@ -53,10 +61,13 @@ export class UserResolver {
    // }
 
    // Queries
-   @Query(() => User)
+   @Query(() => Me)
    async me(@Ctx() { req }: MyContext) {
+      console.log(req.session);
       if (!req.session.userId) {
-         return null;
+         return {
+            user: null,
+         };
       }
 
       return await User.findOne(req.session.userId);

@@ -2,16 +2,12 @@ import { Field, ObjectType } from 'type-graphql';
 import {
    BaseEntity,
    CreateDateColumn,
-   JoinColumn,
    ManyToOne,
-   OneToMany,
-   OneToOne,
    PrimaryGeneratedColumn,
    UpdateDateColumn,
 } from 'typeorm';
 import { Entity } from 'typeorm/decorator/entity/Entity';
 import { Channel } from './Channel';
-import { Message } from './Message';
 import { User } from './User';
 
 @ObjectType()

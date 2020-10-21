@@ -1,12 +1,10 @@
+import 'reflect-metadata';
 import { ApolloServer } from 'apollo-server-express';
-import connectRedis from 'connect-redis';
 import cors from 'cors';
 import 'dotenv-safe/config';
 import express from 'express';
 import session from 'express-session';
-import Redis from 'ioredis';
 import path from 'path';
-import 'reflect-metadata';
 import { buildSchema } from 'type-graphql';
 import { createConnection } from 'typeorm';
 import { Channel } from './entities/Channel';
@@ -16,6 +14,8 @@ import { User } from './entities/User';
 import { ChannelResolver } from './resolvers/channel';
 import { UserResolver } from './resolvers/user';
 import { COOKIE_NAME, __prod__ } from './utilities/constants';
+import { Session as SessionEntity } from './entities/Session';
+import { TypeormStore } from 'typeorm-store';
 
 const main = async () => {
    const PORT = parseInt(process.env.PORT as string) || 4000;
@@ -27,15 +27,12 @@ const main = async () => {
       url: process.env.DATABASE_URL,
       synchronize: !__prod__, // synchronize false during prod
       migrations: [path.join(__dirname, './migrations/*')],
-      entities: [User, Channel, Participant, Message],
+      entities: [User, Channel, Participant, Message, SessionEntity],
    });
 
-   // await Inbox.delete({});
+   // await User.delete({});
    // await Channel.delete({});
    // await conn.runMigrations();
-
-   const RedisStore = connectRedis(session);
-   const redis = new Redis(process.env.REDIS_URL);
 
    const apolloServer = new ApolloServer({
       schema: await buildSchema({
@@ -61,10 +58,7 @@ const main = async () => {
    app.use(
       session({
          name: COOKIE_NAME,
-         store: new RedisStore({
-            client: redis,
-            disableTouch: true,
-         }),
+         store: new TypeormStore({ repository: SessionEntity as any }),
          cookie: {
             maxAge: 1000 * 60 * 60 * 24 * 365 * 10, // 10 years
             httpOnly: true, // good for security, cant access cookie in js frontend
