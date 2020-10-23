@@ -1,9 +1,34 @@
 import { Message } from '../entities/Message';
-import { Arg, Ctx, Int, Mutation, Resolver } from 'type-graphql';
+import {
+   Arg,
+   Ctx,
+   FieldResolver,
+   Int,
+   Mutation,
+   Query,
+   Resolver,
+   Root,
+} from 'type-graphql';
 import { MyContext } from '../utilities/types';
+import { User } from '../entities/User';
 
 @Resolver(Message)
 export class MessageResolver {
+   @FieldResolver(() => User)
+   async user(@Root() message: Message): Promise<User> {
+      const user = await User.findOne({
+         where: { id: message.userId },
+      });
+
+      return user!;
+   }
+
+   //Queries
+   @Query(() => [Message])
+   async messages(): Promise<Message[]> {
+      return await Message.find({});
+   }
+
    //Mutations
    @Mutation(() => Boolean)
    async createMessage(

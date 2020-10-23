@@ -1,3 +1,4 @@
+import argon2 from 'argon2';
 import {
    Arg,
    Ctx,
@@ -10,7 +11,7 @@ import {
    Resolver,
 } from 'type-graphql';
 import { User } from '../entities/User';
-import argon2 from 'argon2';
+import { COOKIE_NAME } from '../utilities/constants';
 import { MyContext } from '../utilities/types';
 
 @InputType()
@@ -146,5 +147,20 @@ export class UserResolver {
       console.log(user);
       req.session.userId = user.id;
       return user;
+   }
+
+   @Mutation(() => Boolean)
+   logout(@Ctx() { req, res }: MyContext) {
+      return new Promise((resolve) =>
+         req.session.destroy((err) => {
+            if (err) {
+               console.log(err);
+               resolve(false);
+               return;
+            }
+            res.clearCookie(COOKIE_NAME);
+            resolve(true);
+         })
+      );
    }
 }

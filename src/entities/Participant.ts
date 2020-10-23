@@ -1,10 +1,9 @@
 import { Field, ObjectType } from 'type-graphql';
 import {
    BaseEntity,
-   Column,
    CreateDateColumn,
    ManyToOne,
-   PrimaryGeneratedColumn,
+   PrimaryColumn,
    UpdateDateColumn,
 } from 'typeorm';
 import { Entity } from 'typeorm/decorator/entity/Entity';
@@ -14,23 +13,19 @@ import { User } from './User';
 @ObjectType()
 @Entity()
 export class Participant extends BaseEntity {
-   @Field()
-   @PrimaryGeneratedColumn()
-   id!: number;
-
    @ManyToOne(() => User, (user) => user.channels)
    user: User;
 
    @ManyToOne(() => Channel, (channel) => channel.users)
-   channel: Channel[];
+   channel: Channel;
 
    @Field()
-   @Column()
-   userId: number;
+   @PrimaryColumn()
+   userId!: number;
 
    @Field()
-   @Column()
-   channelId: String;
+   @PrimaryColumn()
+   channelId!: String;
 
    @Field(() => String)
    @CreateDateColumn()

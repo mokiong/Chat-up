@@ -1,8 +1,10 @@
 import {
    Arg,
    Ctx,
+   Field,
    FieldResolver,
    Mutation,
+   ObjectType,
    Query,
    Resolver,
    Root,
@@ -14,6 +16,16 @@ import { Participant } from '../entities/Participant';
 import { User } from '../entities/User';
 import { MyContext } from '../utilities/types';
 
+@ObjectType()
+class ChannelOutput {
+   // ? means undefined
+   @Field({ nullable: true })
+   error?: string;
+
+   @Field(() => Channel, { nullable: true })
+   channel?: Channel;
+}
+
 @Resolver(Channel)
 export class ChannelResolver {
    @FieldResolver(() => [User])
@@ -22,7 +34,6 @@ export class ChannelResolver {
          where: { channelId: channel.id },
          relations: ['user'],
       });
-
       let userArray: User[] = [];
 
       participants.forEach((element) => {
@@ -43,14 +54,20 @@ export class ChannelResolver {
    // Queries
    @Query(() => [Channel])
    async channels(): Promise<Channel[]> {
-      const channels = await Channel.find({ relations: ['users', 'messages'] });
+      const channels = await Channel.find({});
       return channels;
    }
 
-   @Query(() => User)
-   async channel(@Arg('name') channelName: String): Promise<User | undefined> {
-      const channel = await User.findOne({ where: { name: channelName } });
-      return channel;
+   @Query(() => ChannelOutput)
+   async channel(@Arg('name') channelName: String): Promise<ChannelOutput> {
+      const channel = await Channel.findOne({ where: { name: channelName } });
+      if (!channel) {
+         return {
+            error: 'Channel not found',
+         };
+      }
+
+      return { channel };
    }
 
    // Mutations
