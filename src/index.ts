@@ -32,7 +32,7 @@ const main = async () => {
       entities: [User, Channel, Participant, Message, SessionEntity],
    });
 
-   // await Participant.delete({});
+   // await User.delete({});
    // await Channel.delete({});
    // await conn.runMigrations();
 

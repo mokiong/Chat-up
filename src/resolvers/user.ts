@@ -1,4 +1,5 @@
 import argon2 from 'argon2';
+import { UserInput } from '../utilities/userInput';
 import {
    Arg,
    Ctx,
@@ -13,16 +14,7 @@ import {
 import { User } from '../entities/User';
 import { COOKIE_NAME } from '../utilities/constants';
 import { MyContext } from '../utilities/types';
-
-@InputType()
-class UserInput {
-   @Field()
-   email: string;
-   @Field()
-   username: string;
-   @Field()
-   password: string;
-}
+import { validateRegister } from '../utilities/validateRegister';
 
 @ObjectType()
 class FieldError {
@@ -37,8 +29,14 @@ class FieldError {
 @ObjectType()
 class Me {
    // ? means undefined
-   @Field(() => User, { nullable: true })
-   user?: User;
+   @Field({ nullable: true })
+   username?: String;
+
+   @Field({ nullable: true })
+   id?: String;
+
+   @Field({ nullable: true })
+   email?: String;
 }
 
 @ObjectType()
@@ -65,12 +63,13 @@ export class UserResolver {
    @Query(() => Me)
    async me(@Ctx() { req }: MyContext) {
       if (!req.session.userId) {
-         return {
-            user: null,
-         };
+         return null;
       }
+      const user = await User.findOne(req.session.userId, {
+         select: ['username', 'id', 'email'],
+      });
 
-      return { user: await User.findOne(req.session.userId) };
+      return { ...user };
    }
 
    @Query(() => [User])
@@ -132,21 +131,61 @@ export class UserResolver {
       return { user };
    }
 
-   @Mutation(() => User)
+   @Mutation(() => UserResponse)
    async createUser(
       @Arg('args') { password, ...args }: UserInput,
       @Ctx() { req }: MyContext
-   ): Promise<User> {
-      const hashedPassword = await argon2.hash(password);
+   ): Promise<UserResponse> {
+      const errors = validateRegister({ password, ...args });
 
-      const user = await User.create({
-         password: hashedPassword,
-         ...args,
-      }).save();
+      if (errors) {
+         return { errors };
+      }
 
-      console.log(user);
-      req.session.userId = user.id;
-      return user;
+      try {
+         const hashedPassword = await argon2.hash(password);
+
+         const user = await User.create({
+            password: hashedPassword,
+            ...args,
+         }).save();
+
+         req.session.userId = user.id;
+         console.log(req.session);
+         return { user };
+      } catch (error) {
+         console.log(`ERROR: ${error}`);
+         if (error.code === '23505') {
+            console.log('DUPLICATE KEY!!');
+            if (error.detail.includes('username')) {
+               return {
+                  errors: [
+                     {
+                        field: 'username',
+                        message: 'username already taken',
+                     },
+                  ],
+               };
+            }
+
+            return {
+               errors: [
+                  {
+                     field: 'email',
+                     message: 'email already taken',
+                  },
+               ],
+            };
+         }
+         return {
+            errors: [
+               {
+                  field: 'Server',
+                  message: 'Server error',
+               },
+            ],
+         };
+      }
    }
 
    @Mutation(() => Boolean)
